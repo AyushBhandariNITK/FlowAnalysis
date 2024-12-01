@@ -1,10 +1,11 @@
 package pkg
 
 import (
+	"context"
 	"sync"
 	"time"
 
-	"flowanalysis/pkg/log"
+	"flowanalysis/pkg/kafka"
 	"sync/atomic"
 
 	cmap "github.com/orcaman/concurrent-map/v2"
@@ -66,7 +67,7 @@ func init() {
 }
 
 func StartMap() {
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -85,7 +86,13 @@ func StartMap() {
 			atomic.StoreInt32(&isActive, 1)
 			cond.Broadcast()
 			cond.L.Unlock()
-			log.Print(log.File, "No.of unique entries %d \n", nonactiveMap.Count())
+
+			data := map[string]interface{}{
+				"timestamp":    time.Now().Format(time.RFC3339),
+				"unique_count": nonactiveMap.Count(),
+			}
+			kafka.SendMessage(context.Background(), kafka.FLOW_UNIQUE_TOPIC, data)
+			//log.Print(log.File, "No.of unique entries %d \n", nonactiveMap.Count())
 			nonactiveMap.Clear()
 		}
 	}
