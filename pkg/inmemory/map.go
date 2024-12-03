@@ -1,7 +1,8 @@
-package pkg
+package inmemory
 
 import (
 	"flowanalysis/pkg/log"
+	"flowanalysis/pkg/service"
 	"sync"
 	"time"
 
@@ -9,6 +10,19 @@ import (
 
 	cmap "github.com/orcaman/concurrent-map/v2"
 )
+
+const (
+	MAP_SCHEDULAR_IN_SECONDS = 60 * time.Second
+)
+
+func init() {
+	MapA = NewFlowMap()
+	MapB = NewFlowMap()
+	activeMap = MapA
+	nonactiveMap = MapB
+	cond = sync.NewCond(&sync.Mutex{})
+	atomic.StoreInt32(&isActive, 1)
+}
 
 var (
 	MapA         *FlowMap
@@ -56,17 +70,16 @@ func (f *FlowMap) Count() int {
 	return f.data.Count()
 }
 
-func init() {
-	MapA = NewFlowMap()
-	MapB = NewFlowMap()
-	activeMap = MapA
-	nonactiveMap = MapB
-	cond = sync.NewCond(&sync.Mutex{})
-	atomic.StoreInt32(&isActive, 1)
+func GetActiveFlowMap() *FlowMap {
+	return activeMap
+}
+
+func GetNonActiveFlowMap() *FlowMap {
+	return nonactiveMap
 }
 
 func StartMap() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(MAP_SCHEDULAR_IN_SECONDS)
 	defer ticker.Stop()
 
 	for {
@@ -86,12 +99,13 @@ func StartMap() {
 			cond.Broadcast()
 			cond.L.Unlock()
 
+			count, _ := service.CountEntries(time.Now())
 			// data := map[string]interface{}{
 			// 	"timestamp":    time.Now().Format(time.RFC3339),
 			// 	"unique_count": nonactiveMap.Count(),
 			// }
 			//kafka.SendMessage(context.Background(), kafka.FLOW_UNIQUE_TOPIC, data)
-			log.Print(log.File, "No.of unique entries %d \n", nonactiveMap.Count())
+			log.Print(log.File, "No.of unique entries %d \n", count)
 			nonactiveMap.Clear()
 		}
 	}
