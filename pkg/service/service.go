@@ -54,6 +54,7 @@ func GetAcceptHandler(c echo.Context) error {
 	if endpoint != "" {
 		//uniqueCount := activeMap.Count()
 		uniquecount, _ := CountEntries(time.Now())
+		// uniquecount := 5
 		// log.Print(log.Info, "No. of unique count: %d", uniqueCount)
 		timestamp := time.Now().Format(time.RFC3339)
 
@@ -131,8 +132,6 @@ func InsertEntry(id string, timestamp time.Time) {
 	defer instance.Disconnect()
 
 	formattedTimestamp := timestamp.Format("2006-01-02 15:04:05")
-	// SQL query to insert the entry
-	//query1 := "INSERT INTO my_table (unique_id, timestamp) VALUES ($1, $2)"
 
 	query := `
 		INSERT INTO my_table (unique_id, timestamp)
@@ -150,39 +149,29 @@ func CountEntries(inputTime time.Time) (int, error) {
 		log.Print(log.Warn, "Failed to connect to the database: %v", err)
 	}
 
-	// Truncate the seconds to get the start time (e.g., 10:01:00)
 	startTime := inputTime.Add(-1 * time.Minute)
 
-	// Set the end time to the next minute (start time + 1 minute)
 	endTime := inputTime
 
-	// Format the times as strings
 	startTimeStr := startTime.Format("2006-01-02 15:04:05")
 	endTimeStr := endTime.Format("2006-01-02 15:04:05")
-	log.Print(log.Info, "Start time %s and end time %s", startTime, endTime)
+	log.Print(log.Info, "Start time %s and end time for count unique entries query %s", startTime, endTime)
 	// Construct the SQL query
 	query := `
 		SELECT COUNT(*)
 		FROM my_table
 		WHERE timestamp >= $1 AND timestamp < $2;`
 
-	// Execute the query
-	// Execute the query using the database instance
 	result, err := instance.Query(query, startTimeStr, endTimeStr)
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute query: %v", err)
 	}
-	// log.Print(log.Info, "no.of count result %+v", result)
-	// Cast the result to the expected format
+
 	rows, ok := result.([]map[string]interface{})
 	if !ok || len(rows) == 0 {
 		return 0, fmt.Errorf("unexpected result format or no rows returned")
 	}
-
-	// Extract the count value from the result
-	// log.Print(log.Info, "Count row data %+v", rows)
 	count, ok := rows[0]["count"].(int64)
-	log.Print(log.Info, "Count value after parsing %d", count)
 	if !ok {
 		return 0, fmt.Errorf("failed to parse count from query result")
 	}

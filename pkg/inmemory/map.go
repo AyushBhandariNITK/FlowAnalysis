@@ -1,6 +1,8 @@
 package inmemory
 
 import (
+	"context"
+	"flowanalysis/pkg/kafka"
 	"flowanalysis/pkg/log"
 	"flowanalysis/pkg/service"
 	"sync"
@@ -100,11 +102,12 @@ func StartMap() {
 			cond.L.Unlock()
 
 			count, _ := service.CountEntries(time.Now())
-			// data := map[string]interface{}{
-			// 	"timestamp":    time.Now().Format(time.RFC3339),
-			// 	"unique_count": nonactiveMap.Count(),
-			// }
-			//kafka.SendMessage(context.Background(), kafka.FLOW_UNIQUE_TOPIC, data)
+			// count := 10
+			data := map[string]interface{}{
+				"timestamp":    time.Now().Format(time.RFC3339),
+				"unique_count": count,
+			}
+			kafka.SendMessage(context.Background(), kafka.FLOW_UNIQUE_TOPIC, data)
 			log.Print(log.File, "No.of unique entries %d \n", count)
 			nonactiveMap.Clear()
 		}

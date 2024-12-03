@@ -13,7 +13,7 @@ var (
 )
 
 const (
-	broker            = "localhost:9092"
+	broker            = "kafka:9092"
 	FLOW_UNIQUE_TOPIC = "flow.unique.entries"
 )
 
@@ -21,10 +21,9 @@ type KafkaWriter struct {
 	writer *kafka.Writer
 }
 
-// func init() {
-
-// 	//kafkaStream = NewKafkaWriter(FLOW_UNIQUE_TOPIC, broker)
-// }
+func init() {
+	kafkaStream = NewKafkaWriter(FLOW_UNIQUE_TOPIC, broker)
+}
 
 func NewKafkaWriter(topic, broker string) *KafkaWriter {
 	return &KafkaWriter{
@@ -63,6 +62,6 @@ func SendMessage(ctx context.Context, topic, message interface{}) {
 	case FLOW_UNIQUE_TOPIC:
 		kafkaStream.SendMessage(ctx, message)
 	default:
-		log.Print(log.Error, "Not a valid topi")
+		log.Print(log.Error, "Not a valid topic")
 	}
 }
