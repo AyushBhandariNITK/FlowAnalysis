@@ -27,7 +27,7 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       DB_SSLMODE: disable
-      INMEMORY: true
+      INMEMORY: false
     depends_on:
       - db
     ports:
