@@ -137,3 +137,52 @@ curl "http://localhost:5010/api/verve/accept?id=123&endpoint=http://example.com"
 ### **Periodic Map Management**
 - Executes every 60 seconds.
 - Alternates between `MapA` and `MapB`.
+
+
+
+Here's how the README file can be structured for your Docker Compose setup:
+
+---
+
+# Docker Compose Setup for PostgreSQL, Kafka, and Flow Analysis
+
+This project defines a multi-container Docker Compose setup to run a PostgreSQL database, Kafka message broker, and a flow analysis backend service. Below is a quick overview of the setup:
+
+## 1. **Services Overview**
+The application is composed of three services:
+- **`db`**: Runs a PostgreSQL container for database storage.
+- **`flowanalysis`**: Backend service for flow analysis, connected to PostgreSQL.
+- **`kafka`**: Kafka container for message brokering.
+
+## 2. **Volumes and Networking**
+- Volumes are mounted using **relative paths** (e.g., `./volumes/postgress/postgress_data`) for PostgreSQL and Kafka data persistence.
+- Docker's default network is used to allow communication between the services.
+
+## 3. **Environment Configuration**
+- The `flowanalysis` service includes an environment variable `INMEMORY`, which is set to `true` by default to enable **in-memory mode**. This can be changed for extension solution needs by updating the value to `false`.
+
+---
+
+## Usage
+
+To start the application, run:
+
+```bash
+docker-compose up -d
+```
+
+This will pull the necessary images, create the containers, and start the services in detached mode.
+
+## Stopping the Application
+
+To stop the services, run:
+
+```bash
+docker-compose down
+```
+
+This will stop and remove the containers.
+
+---
+
+This README provides an overview of your Docker Compose setup, highlighting the essential configurations and instructions for usage.
