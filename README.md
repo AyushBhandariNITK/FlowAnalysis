@@ -1,11 +1,18 @@
-Here's the updated README file with more details added to **Approach 1: In-Memory Map**:
 
----
 
 # **Flow Analysis Service with Docker Compose**
 
 ## **Overview**
 This repository defines a multi-container Docker Compose setup to run a PostgreSQL database, Kafka message broker, and Flow Analysis backend service. The service processes data entries with either in-memory or persistent storage based on configuration.
+
+## **Docker Image Build**
+Before running the service, build the backend service Docker image:
+
+```bash
+docker build -t analysis:v1.0 .
+```
+
+This command will build the backend service image with the tag `analysis:v1.0`.
 
 ## **Docker Compose Setup**
 The Docker Compose configuration contains three services:
@@ -130,5 +137,3 @@ To scale the service, multiple instances are deployed behind an **Nginx** load b
 - **Kafka Message Duplication**: Consumers handle message duplication, ensuring only one message is processed per time window.
 
 ---
-
-This updated README now includes additional details for the **In-Memory Map Approach**, outlining its structure, flow, use cases, benefits, and configuration for easier understanding of this approach.
