@@ -42,6 +42,7 @@ var (
 )
 
 func GetAcceptHandler(c echo.Context) error {
+
 	id := c.QueryParam("id")
 	if id == "" {
 		return c.String(http.StatusBadRequest, "failed")
@@ -150,21 +151,20 @@ func CountEntries(inputTime time.Time) (int, error) {
 	}
 
 	// Truncate the seconds to get the start time (e.g., 10:01:00)
-	startTime := inputTime.Truncate(time.Minute)
+	startTime := inputTime.Add(-1 * time.Minute)
 
 	// Set the end time to the next minute (start time + 1 minute)
-	endTime := startTime.Add(time.Minute)
+	endTime := inputTime
 
 	// Format the times as strings
 	startTimeStr := startTime.Format("2006-01-02 15:04:05")
 	endTimeStr := endTime.Format("2006-01-02 15:04:05")
-
+	log.Print(log.Info, "Start time %s and end time %s", startTime, endTime)
 	// Construct the SQL query
 	query := `
 		SELECT COUNT(*)
 		FROM my_table
-		WHERE timestamp >= $1 AND timestamp < $2;
-	`
+		WHERE timestamp >= $1 AND timestamp < $2;`
 
 	// Execute the query
 	// Execute the query using the database instance
@@ -172,7 +172,7 @@ func CountEntries(inputTime time.Time) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute query: %v", err)
 	}
-	log.Print(log.Info, "no.of count result %+v", result)
+	// log.Print(log.Info, "no.of count result %+v", result)
 	// Cast the result to the expected format
 	rows, ok := result.([]map[string]interface{})
 	if !ok || len(rows) == 0 {
@@ -180,9 +180,12 @@ func CountEntries(inputTime time.Time) (int, error) {
 	}
 
 	// Extract the count value from the result
+	// log.Print(log.Info, "Count row data %+v", rows)
 	count, ok := rows[0]["count"].(int64)
+	log.Print(log.Info, "Count value after parsing %d", count)
 	if !ok {
 		return 0, fmt.Errorf("failed to parse count from query result")
 	}
+
 	return int(count), nil
 }

@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"flowanalysis/pkg/log"
 	"fmt"
 	"strconv"
 	"sync"
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-	MAX_IDEAL_TIME_PERIOD = 30 * time.Second
+	MAX_IDEAL_TIME_PERIOD = 5 * time.Second
 )
 
 type PostgreDb struct {
@@ -22,6 +23,10 @@ var (
 	once     sync.Once
 	instance *PostgreDb
 )
+
+func init() {
+	go StartScheduler()
+}
 
 func GetPostgreDbInstance() *PostgreDb {
 	once.Do(func() {
@@ -54,7 +59,7 @@ func (p *PostgreDb) Connect() error {
 	if err != nil {
 		return fmt.Errorf("error connecting to PostgreSQL: %v", err)
 	}
-	maxOpenConns := getEnv("DB_MAX_OPEN_CONNS", "100")
+	maxOpenConns := getEnv("DB_MAX_OPEN_CONNS", "500")
 	maxOpenConnsInt, _ := strconv.Atoi(maxOpenConns)
 	db.SetMaxOpenConns(maxOpenConnsInt)
 	db.SetConnMaxLifetime(MAX_IDEAL_TIME_PERIOD)
@@ -132,5 +137,32 @@ func (p *PostgreDb) Execute(query string, args ...interface{}) error {
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
+	return nil
+}
+
+func StartScheduler() {
+
+	for {
+		time.Sleep(time.Second * 60)
+		currentTime := time.Now()
+		deleteBeforeTime := currentTime.Add(-2 * time.Minute)
+		deleteBeforeTimeStr := deleteBeforeTime.Format("2006-01-02 15:04:05")
+		log.Print(log.Info, "Deleting entries with timestamp before: %s\n", deleteBeforeTimeStr)
+		err := instance.DeleteOldEntries(deleteBeforeTimeStr)
+		if err != nil {
+			log.Print(log.Info, "Error deleting old entries: %v\n", err)
+		} else {
+			log.Print(log.Info, "Successfully deleted old entries.")
+		}
+	}
+}
+
+func (p *PostgreDb) DeleteOldEntries(deleteBeforeTimeStr string) error {
+
+	query := "DELETE FROM my_table WHERE timestamp < $1"
+	err := p.Delete(query, deleteBeforeTimeStr)
+	if err != nil {
+		return fmt.Errorf("failed to delete old entries: %v", err)
+	}
 	return nil
 }

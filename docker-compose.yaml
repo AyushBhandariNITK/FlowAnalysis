@@ -1,41 +1,68 @@
 version: "3.9"
 services:
-  kafka:
-    image: docker.io/bitnami/kafka:3.5.0
-    container_name: kafka-backend
-    ports:
-      - "9092:9092"
-      - "9094:9094"
-    environment:
-      # KRaft settings
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      # Listeners
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,AA:PLAINTEXT,BB:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=AA://:9092,BB://:9094,CONTROLLER://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=AA://192.168.0.182:9092,BB://192.168.0.182:9094
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=AA
-      - ALLOW_PLAINTEXT_LISTENER=yes
-    volumes:
-      - /Users/ayush/kafka_data:/bitnami/kafka
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:v0.7.1
-    container_name: kafka-frontend
-    ports:
-      - "9000:8080"
+  db:
+    image: postgres:latest
+    container_name: postgresql-container
     environment:
-      - DYNAMIC_CONFIG_ENABLED=true
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+      PGDATA: /var/lib/postgresql/data/pgdata
+      DB_MAX_OPEN_CONNS: 500
+    ports:
+      - "5432:5432"  # Exposes the PostgreSQL default port (5432) to the host
+    volumes:
+      - ~/volumes/postgress/postgress_data:/var/lib/postgresql/data
+      - ~/volumes/postgress/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
 
   flowanalysis:
-    image: analysis:v1
+    image: analysis:v7
     container_name: flowanalysis-backend
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: mydb
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_SSLMODE: disable
+    depends_on:
+      - db
     ports:
       - "5010:5010"
+    restart: unless-stopped
+  # kafka:
+  #   image: docker.io/bitnami/kafka:3.5.0
+  #   container_name: kafka-backend
+  #   ports:
+  #     - "9092:9092"
+  #     - "9094:9094"
+    # environment:
+    #   # KRaft settings
+    #   - KAFKA_CFG_NODE_ID=0
+    #   - KAFKA_CFG_PROCESS_ROLES=controller,broker
+    #   - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+    #   # Listeners
+    #   - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,AA:PLAINTEXT,BB:PLAINTEXT
+    #   - KAFKA_CFG_LISTENERS=AA://:9092,BB://:9094,CONTROLLER://:9093
+    #   - KAFKA_CFG_ADVERTISED_LISTENERS=AA://192.168.0.182:9092,BB://192.168.0.182:9094
+    #   - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    #   - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=AA
+    #   - ALLOW_PLAINTEXT_LISTENER=yes
+  #   volumes:
+  #     - /Users/ayush/kafka_data:/bitnami/kafka
 
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:v0.7.1
+  #   container_name: kafka-frontend
+  #   ports:
+  #     - "9000:8080"
+  #   environment:
+  #     - DYNAMIC_CONFIG_ENABLED=true
 
 volumes:
-  kafka_data:
+  postgres_data:
     driver: local
+  # kafka_data:
+  #   driver: local
