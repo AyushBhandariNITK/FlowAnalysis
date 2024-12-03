@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   flowanalysis:
-    image: analysis:kafka4
+    image: analysis:v2.0
     container_name: flowanalysis-backend
     environment:
       DB_USER: postgres
@@ -27,6 +27,7 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       DB_SSLMODE: disable
+      INMEMORY: true
     depends_on:
       - db
     ports:
@@ -51,7 +52,7 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=AA
       - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true  # Enable automatic topic creation at runtime
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true 
     volumes:
       - ~/kafka/kafka_data:/bitnami/kafka
     restart: unless-stopped

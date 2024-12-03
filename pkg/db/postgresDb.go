@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"flowanalysis/pkg/log"
+	"flowanalysis/pkg/utils"
 	"fmt"
 	"strconv"
 	"sync"
@@ -24,8 +25,10 @@ var (
 	instance *PostgreDb
 )
 
-func init() {
-	go StartScheduler()
+func StartCleanupSchedular() {
+	if !utils.UseInMemory() {
+		go StartScheduler()
+	}
 }
 
 func GetPostgreDbInstance() *PostgreDb {
@@ -40,11 +43,11 @@ func GetPostgreDbInstance() *PostgreDb {
 }
 
 func (p *PostgreDb) Connect() error {
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "password")
-	dbName := getEnv("DB_NAME", "mydb")
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := utils.GetEnv("DB_USER", "postgres")
+	dbPassword := utils.GetEnv("DB_PASSWORD", "password")
+	dbName := utils.GetEnv("DB_NAME", "mydb")
+	dbHost := utils.GetEnv("DB_HOST", "localhost")
+	dbPort := utils.GetEnv("DB_PORT", "5432")
 
 	connStr := fmt.Sprintf(
 		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
@@ -59,7 +62,7 @@ func (p *PostgreDb) Connect() error {
 	if err != nil {
 		return fmt.Errorf("error connecting to PostgreSQL: %v", err)
 	}
-	maxOpenConns := getEnv("DB_MAX_OPEN_CONNS", "500")
+	maxOpenConns := utils.GetEnv("DB_MAX_OPEN_CONNS", "500")
 	maxOpenConnsInt, _ := strconv.Atoi(maxOpenConns)
 	db.SetMaxOpenConns(maxOpenConnsInt)
 	db.SetConnMaxLifetime(MAX_IDEAL_TIME_PERIOD)
@@ -141,9 +144,8 @@ func (p *PostgreDb) Execute(query string, args ...interface{}) error {
 }
 
 func StartScheduler() {
-
+	// time.Sleep(time.Second * 120)
 	for {
-		time.Sleep(time.Second * 60)
 		currentTime := time.Now()
 		deleteBeforeTime := currentTime.Add(-2 * time.Minute)
 		deleteBeforeTimeStr := deleteBeforeTime.Format("2006-01-02 15:04:05")
@@ -154,6 +156,7 @@ func StartScheduler() {
 		} else {
 			log.Print(log.Info, "Successfully deleted old entries.")
 		}
+		time.Sleep(time.Second * 60)
 	}
 }
 

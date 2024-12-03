@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"flowanalysis/pkg/db"
+	"flowanalysis/pkg/inmemory"
 	"flowanalysis/pkg/log"
+	"flowanalysis/pkg/utils"
 	"fmt"
 	"net/http"
 	"strings"
@@ -47,15 +49,13 @@ func GetAcceptHandler(c echo.Context) error {
 	if id == "" {
 		return c.String(http.StatusBadRequest, "failed")
 	}
-	//activeMap := inmemory.GetActiveFlowMap()
-	InsertEntry(id, time.Now())
-	//activeMap.Set(id, "1")
+
+	insertID(id)
+
 	endpoint := c.QueryParam("endpoint")
 	if endpoint != "" {
-		//uniqueCount := activeMap.Count()
-		uniquecount, _ := CountEntries(time.Now())
-		// uniquecount := 5
-		// log.Print(log.Info, "No. of unique count: %d", uniqueCount)
+
+		uniquecount := getCount()
 		timestamp := time.Now().Format(time.RFC3339)
 
 		statusCode, err := sendUniqueCountAsPost(endpoint, timestamp, uniquecount)
@@ -121,6 +121,25 @@ func sendUniqueCountAsPost(endpoint string, timestamp string, count int) (int, e
 
 func isConnectionRefusedError(err error) bool {
 	return strings.Contains(err.Error(), "connection refused")
+}
+
+func insertID(id string) {
+	if utils.UseInMemory() {
+		activeMap := inmemory.GetActiveFlowMap()
+		activeMap.Set(id, "1")
+	} else {
+		InsertEntry(id, time.Now())
+	}
+
+}
+
+func getCount() int {
+	if utils.UseInMemory() {
+		activeMap := inmemory.GetActiveFlowMap()
+		return activeMap.Count()
+	}
+	count, _ := CountEntries(time.Now())
+	return count
 }
 
 func InsertEntry(id string, timestamp time.Time) {

@@ -21,7 +21,7 @@ type KafkaWriter struct {
 	writer *kafka.Writer
 }
 
-func init() {
+func InitKafka() {
 	kafkaStream = NewKafkaWriter(FLOW_UNIQUE_TOPIC, broker)
 }
 
