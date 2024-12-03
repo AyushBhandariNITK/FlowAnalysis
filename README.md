@@ -115,3 +115,68 @@ The in-memory approach is implemented to efficiently manage high request counts 
 ---
 
 This explains both the advantages of using the in-memory approach for high performance and memory efficiency, as well as the trade-off of potential data loss in case of a service restart.
+
+## **Second Approach: Persistent Storage with PVC**
+
+In this approach, instead of using in-memory data storage, we store the data persistently using Persistent Volume Claims (PVC). This ensures durability across service restarts and better long-term data retention.
+
+### **Storage Options**
+
+We have considered three storage options:
+
+1. **Redis with TTL**: Redis is an in-memory data store with time-to-live (TTL) support, making it ideal for short-lived data.
+   - **Disadvantages**: While Redis offers fast read/write access, it is not ideal for counting scenarios that involve high throughput and heavy write operations. Its performance can degrade with large datasets or high write operations. Additionally, managing TTL for counts becomes complex, and its persistence layer is not as straightforward as with SQL databases.
+
+2. **SQL (PostgreSQL)**: PostgreSQL is an ACID-compliant relational database that can handle heavy write operations and structured data storage.
+   - **Advantages**: PostgreSQL is suitable for storing request counts as it ensures data integrity and can handle heavy writes efficiently. It is ideal for systems requiring frequent updates and high consistency. With optimized schema design, PostgreSQL offers scalability for counting and indexing operations.
+   - **Disadvantages**: Under extremely high write loads, SQL databases can face performance bottlenecks if not properly optimized. However, since we are not using batch processing and request counts are relatively small, PostgreSQL is an excellent choice for persistence.
+
+3. **NoSQL (MongoDB)**: NoSQL databases offer flexibility and scalability but are generally not ideal for counting use cases.
+   - **Disadvantages**: NoSQL databases lack built-in support for atomic operations like counting and aggregation, making them less efficient for our scenario. SQL or Redis would be better suited for efficient and precise counting operations.
+
+---
+
+## **Decision to Proceed with SQL Approach**
+
+After evaluating the storage options, we proceeded with the **SQL (PostgreSQL)** approach. PostgreSQL’s capability to handle heavy write operations and structured data storage makes it a suitable choice for managing request counts and providing durability across service restarts.
+
+---
+
+## **Extensions Implemented**
+
+### **Extension 1: Changing GET Request to POST**
+
+The original approach used a `GET` request to accept new data entries. For better handling of larger payloads and to adhere to RESTful principles, the request method was changed to **POST**. This modification enables more efficient data handling, especially with a large number of incoming requests.
+
+---
+
+### **Extension 3: Data Dump to Kafka**
+
+Initially, data was dumped into a log file. However, to enhance scalability and integrate with a more event-driven architecture, we transitioned to **Kafka** for the data dump. Kafka offers a distributed, fault-tolerant, high-throughput messaging system that processes real-time data streams more efficiently than writing to a log file.
+
+This change enables better integration with other services, improved system monitoring, and enhanced scalability for future needs.
+
+---
+
+This updated approach combines persistent storage with PostgreSQL and introduces Kafka for better event streaming, making the system more scalable and efficient for handling large volumes of data.
+
+
+## **Extension 2: Horizontal Scaling with Load Balancer**
+
+To scale the service horizontally and handle increased traffic, we can deploy multiple instances of the service and use a **load balancer** to distribute incoming requests efficiently.
+
+### **Solution:**
+1. **Load Balancer (Nginx)**: 
+   - Nginx can be used to distribute incoming traffic evenly across two or more instances of the service.
+   - This ensures that the service can handle more traffic by load balancing requests between multiple service instances.
+
+2. **Data Consistency**: 
+   - All service instances will be polling from the same PostgreSQL database, ensuring that the count values remain consistent across instances.
+
+3. **Kafka Message Duplication**:
+   - Since the service sends a message once every minute, even if multiple instances send the same message due to the scheduler, the consumer will only process one message for that time window.
+   - By handling Kafka message duplication at the consumer side, we ensure that only one message is processed, regardless of how many instances send the same data.
+
+This solution enables horizontal scaling of the service with a load balancer while maintaining consistent data and preventing Kafka message duplication.
+
+---
