@@ -21,10 +21,10 @@ type KafkaWriter struct {
 	writer *kafka.Writer
 }
 
-func init() {
+// func init() {
 
-	kafkaStream = NewKafkaWriter(FLOW_UNIQUE_TOPIC, broker)
-}
+// 	//kafkaStream = NewKafkaWriter(FLOW_UNIQUE_TOPIC, broker)
+// }
 
 func NewKafkaWriter(topic, broker string) *KafkaWriter {
 	return &KafkaWriter{
