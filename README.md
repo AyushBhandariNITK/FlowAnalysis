@@ -33,11 +33,11 @@ The Docker Compose configuration contains three services:
 ### **Usage**
 Start the services:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 Stop and remove the services:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### **Environment Configuration**
