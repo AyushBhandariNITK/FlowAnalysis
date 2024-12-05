@@ -1,32 +1,28 @@
-FROM golang:1.22.2 AS build
-ENV GO1111ODUE=on \
-    CGO_ENABLED=0 \
+FROM golang:1.22.2-alpine AS build
+
+RUN apk add --no-cache git
+ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64
 
-WORKDIR /build
+WORKDIR /app
 
-COPY pkg ./pkg
-COPY main.go .
-
-COPY go.mod .
-RUN go mod tidy
+COPY go.mod go.sum ./
 RUN go mod download
+
+COPY main.go ./ 
+COPY pkg ./pkg
 
 RUN go build -o flowanalysis .
 
-WORKDIR /dist
-RUN cp /build/flowanalysis .
+FROM alpine:3.18
 
-FROM ubuntu:22.04
+RUN apk add --no-cache curl
 
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /app/flowanalysis .
 
-WORKDIR /
-COPY --from=build /dist/flowanalysis .
 EXPOSE 5010
 
 ENTRYPOINT ["./flowanalysis"]
+
