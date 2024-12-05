@@ -1,4 +1,4 @@
-To run the project following steps should be taken
+### **To run the project, follow these steps**  
 
 ### **Prerequisites**  
 Ensure the following are installed on your system:  
@@ -12,10 +12,10 @@ Ensure the following are installed on your system:
 1. **Clone the repository**  
    Clone the project from the GitHub link:  
    ```bash
-   git clone <GitHub-Repository-Link>
-   cd <cloned-repository>
+   git clone https://github.com/AyushBhandariNITK/FlowAnalysis
+   cd FlowAnalysis
    ```
-   **GitHub Repository**: [GitHub Link](<GitHub-Repository-Link>)  
+   **GitHub Repository**: [GitHub Link](https://github.com/AyushBhandariNITK/FlowAnalysis)  
 
 2. **Prepare the images**  
    The project consists of three components:  
@@ -27,7 +27,7 @@ Ensure the following are installed on your system:
 
    - **For Kafka and Postgres**:  
      Option 1: Download from the provided Drive link (recommended for large images).  
-       **Google Drive Link**: [Download Images](<Google-Drive-Link>)  
+       **Google Drive Link**: [Download Images](https://drive.google.com/drive/folders/1nFYBQRvLIpa1sbXEMVABziwy8V2h2Gf5)  
      Option 2: Pull the images directly:  
        ```bash
        docker pull postgres:latest
@@ -59,4 +59,3 @@ Ensure the following are installed on your system:
 
 ### **Happy Testing!**  
 If you encounter any issues, feel free to reach out for support.  
-
